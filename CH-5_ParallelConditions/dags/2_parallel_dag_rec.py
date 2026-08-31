@@ -1,7 +1,7 @@
 from airflow.sdk import dag, task
 
 @dag
-def parallel_dag():
+def parallel_dag_rec():
 
     @task.bash
     def task_bash():
@@ -42,4 +42,4 @@ def parallel_dag():
 
     task_bash >> [api_data, db_data, s3_data] >> process_data()
 
-parallel_dag = parallel_dag()
+parallel_dag_rec= parallel_dag_rec()
