@@ -1,0 +1,43 @@
+from airflow.sdk import dag, task
+from airflow.providers.standard.operators.bash import BashOperator
+from datetime import timedelta
+
+@dag
+def kwargs_dag():
+
+    @task.python(retries=3, retry_delay=timedelta(seconds=5))
+    def fetch_data(**kwargs):
+        print("Printing Kwargs: ",kwargs)
+        ti = kwargs['ti']
+        # Simulate fetching data from an API
+        data = {"name":"Airflow","version":"3.0"}
+        ti.xcom_push(key="fetched_data", value=data)
+      
+        # Pushing data tool XCOM manually
+        
+
+    @task.python(retries=3, retry_delay=timedelta(seconds=5))
+    def process_data(**kwargs):
+        ti = kwargs['ti']
+        # Pull the data from XCOM manually
+        pulled_data = ti.xcom_pull(key="fetched_data",task_ids="fetch_data")
+
+        # Simulate processing the data
+        processed_data = f"Processed {pulled_data['name']} version {pulled_data['version']}" 
+        print(processed_data)
+
+
+    @task.bash(retries=3, retry_delay=timedelta(seconds=5))
+    def bash_task_with_xcom(**kwargs):
+        #ti = kwargs['ti'] # You can't refer any python variable in bash task.
+        my_var = "mateus"
+        return f"""
+                echo "This is a {my_var} task!. The fetched data is {{ ti.xcom_pull(key='fetched_data' , task_ids='fetch_data') }}"
+                """
+
+
+
+    # Define the depencencies
+    fetch_data() >> process_data()  >> bash_task_with_xcom()
+
+dag = kwargs_dag()
