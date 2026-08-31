@@ -17,7 +17,7 @@ def conditional_dag():
         data = {"type":"db","data": ["data4", "data5", "data6"]}
         return data 
 
-    @task.python()
+    @task.python
     def fetch_s3():
         data = {"type":"s3","data": ["data7", "data8", "data9"]}
         return data
