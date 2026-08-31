@@ -5,7 +5,6 @@ def parallel_dag_rec():
 
     @task.bash
     def task_bash():
-
         return "echo 'Hello from Bash'"
 
     @task.python
