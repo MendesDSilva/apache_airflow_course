@@ -1,8 +1,8 @@
 from airflow.sdk import dag, task
 import os
 
-@dag
-def child_dag_second():
+@dag(is_paused_upon_cration=False)
+def child_dag_second_dag():
     @task
     def task_pre():
         print("Task A")
@@ -22,4 +22,4 @@ def child_dag_second():
 
         task_pre() >> task_write()
 
-child_dag_second_dag = child_dag_second()
+child_dag_second_dag = child_dag_second_dag()
