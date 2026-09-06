@@ -38,7 +38,7 @@ def etl_pipeline():
     @task
     def transform(ti):
         # Fetching timestamp from previous task
-        timestamp = ti.xcom_pull(task_ids ="timestamp", key="retunr_value")
+        timestamp = ti.xcom_pull(task_ids ="timestamp", key="return_value")
 
         # Reading darta from staging layer 
         df = pd.read_csv(f"/tmp/raw/data_{timestamp}.csv")
@@ -47,14 +47,14 @@ def etl_pipeline():
         df["age_group"] = df['Age'].apply(lambda x: "Young" if x < 30 else "Adult")
 
         # Creating transformed data directory if it doesn't exist
-        os.makedirs("/temp/transformed", exist_ok=True)
+        os.makedirs("/tmp/transformed", exist_ok=True)
 
         #Writing transformed data to transformed layer
         df.to_csv(f"/tmp/transformed/data_transformed_{timestamp}.csv", index=False)
 
 
     # Define the task dependencies
-    timestamp() >> extract() >> transform
+    timestamp() >> extract() >> transform()
 
 etl_pipeline()
 
