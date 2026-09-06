@@ -2,6 +2,7 @@ from airflow.sdk import dag, task
 import requests
 import pandas as pd
 import os
+from sqlalchemy import create_engine, text
 
 @dag
 def etl_pipeline():
@@ -12,6 +13,7 @@ def etl_pipeline():
         from datetime import datetime
         return datetime.now().isoformat()
 
+   
     # Reading and writing the data to tmp layer into the Docker
     @task
     def extract(ti):
@@ -34,6 +36,7 @@ def etl_pipeline():
                 f.write(f"{item['id']},{item['name']},{item['Age']}\n")
 
         return "Data extracted and stored in staging layer."        
+    
 
     @task
     def transform(ti):
@@ -53,8 +56,45 @@ def etl_pipeline():
         df.to_csv(f"/tmp/transformed/data_transformed_{timestamp}.csv", index=False)
 
 
+
+    @task
+    def crate_tables():
+        query = """
+        CREATE TABLE IF NOT EXISTS employees(
+            id INT PRIMARY KEY,
+            name VARCHAR(255),
+            age INT,
+            age_group VARCHAR(50)
+        );
+        """
+        conn = create_engine("postgresql://airflow:airflow@postgres:5432/airflow").connect()
+
+        with conn.begin() as transaction:
+            try:
+                conn.execute(text(query))
+            except Exception as e:
+                transaction.rollback()
+                raise e
+            else:
+                transaction.commit()
+
+    @task
+    def load(ti):
+
+        # Fetching timestamp from previous task
+        timestamp = ti.xcom_pull(task_ids = "timestamp", key = "return_value")
+
+        # Reading transformed data from transformed layer
+        df = pd.read_csv(f"/tmp/transformed/data_transformed_{timestamp}.csv")
+
+        # Loading data to Postgres
+        engine = create_engine("postgresql://airflow:airflow@postgres:5432/airflow")
+        df.to_sql("employees", con=engine, if_exists="append",index=False)
+        
+        engine.dispose()
+
     # Define the task dependencies
-    timestamp() >> extract() >> transform()
+    timestamp() >> extract() >> transform() >> load()
 
 etl_pipeline()
 
