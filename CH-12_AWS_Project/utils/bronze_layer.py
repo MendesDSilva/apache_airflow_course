@@ -56,7 +56,9 @@ class BronzeLayer:
         )
         return f"Data uploaded to s3 bucket '{bucket_name}' with object key '{object_key}'"
 
-obj = BronzeLayer()
+if __name__=="__main__":
 
-data = obj.ingest_data_api("https://raw.githubusercontent.com/anshlambagit/ApacheAirflow/refs/heads/main/bookings.csv")
-obj.put_data_s3("airflow-aws-course-bucket","bronze/bookings.csv",data)
+    obj = BronzeLayer()
+
+    data = obj.ingest_data_api("https://raw.githubusercontent.com/anshlambagit/ApacheAirflow/refs/heads/main/bookings.csv")
+    obj.put_data_s3("airflow-aws-course-bucket","bronze/bookings.csv",data)
